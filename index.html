@@ -31,11 +31,11 @@ button.on{background:#ff6f9c;color:#fff}
 <div id="wait" class="col hidden"><div>Passe este código para a outra pessoa:</div><div id="code">----</div><div>Esperando alguém entrar…</div></div>
 <div id="msg"></div><button id="solo" class="ghost">Jogar sozinho</button></div></div>
 <div id="st"></div>
-<div id="help">Toque/clique para andar · ou use W A S D / setas</div>
+<div id="help">Clique/toque ou W A S D para andar · Shift ou 2 toques = correr · Espaço = pular<br>T sentar · B deitar · L deitar no colo</div>
 <div id="chat"><div id="log"></div><div class="row"><input id="ci" maxlength="120" placeholder="Mensagem (C ou Enter)" autocomplete="off"><button id="cs">➤</button></div></div>
 <div id="bar">
 <button id="b-hug">🤗 Abraço (H)</button><button id="b-kiss">💋 Beijo (K)</button>
-<button id="b-lead">🤝 Guiar (G)</button><button id="b-follow">🙋 Seguir (F)</button><button id="b-none">✖ Soltar (X)</button>
+<button id="b-lead">🤝 Guiar (G)</button><button id="b-follow">🙋 Seguir (F)</button><button id="b-sit">🪑 Sentar (T)</button><button id="b-lie">🛌 Deitar (B)</button><button id="b-lap">😴 Colo (L)</button><button id="b-none">✖ Soltar (X)</button>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
@@ -47,7 +47,7 @@ const flowers=Array.from({length:260},()=>({x:rnd()*W,y:rnd()*H,c:['#fff','#ffd6
 const trees=Array.from({length:34},()=>({x:60+rnd()*(W-120),y:60+rnd()*(H-120),s:.8+rnd()*.7,c:rnd()<.3?'#e58fb4':'#4faa7a'}))
  .filter(t=>Math.hypot(t.x-W/2,t.y-H/2)>260&&Math.hypot(t.x-1300,t.y-300)>190);
 const flies=Array.from({length:24},(_,i)=>({x:rnd()*W,y:rnd()*H,p:i}));
-const me={x:W/2+(Math.random()-.5)*200,y:H/2+60,fx:1,dx:0,dy:1,act:'none',c:cols[Math.random()*cols.length|0],mv:false,tx:null,ty:null};
+const me={x:W/2+(Math.random()-.5)*200,y:H/2+60,fx:1,dx:0,dy:1,act:'none',c:cols[Math.random()*cols.length|0],mv:false,jz:0,vz:0,run:false,tx:null,ty:null};let wantJump=false,lastTap={c:"",t:0};
 let conn=null,remote=null,remObj=null,roomName="",net=false,hosting=false,keys={},hearts=[],heartT=0,lastSend=0,lastJson='',camx=0,camy=0,vw=0,vh=0,dpr=1;
 const $=id=>document.getElementById(id),msg=$('msg');
 const PREF='espacoadois-sala-',CFG={config:{iceServers:['stun.l.google.com','stun1.l.google.com','stun2.l.google.com'].map(h=>({urls:'stun:'+h+':19302'}))}};
@@ -76,27 +76,29 @@ function sendChat(){const t=$('ci').value.trim().slice(0,120);if(!t)return;$('ci
 $('cs').onclick=sendChat;$('ci').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){sendChat();$('ci').blur()}if(e.key==='Escape')$('ci').blur()});
 function rs(){dpr=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';vw=innerWidth/ZM;vh=innerHeight/ZM}
 addEventListener('resize',rs);rs();
-const IDS=['hug','kiss','lead','follow','none'];
+const IDS=['hug','kiss','lead','follow','sit','lie','lap','none'],LOW=['sit','lie','lap'];
 function setAct(a){me.act=me.act===a?'none':a;IDS.forEach(k=>document.getElementById('b-'+k).classList.toggle('on',me.act===k&&k!=='none'))}
 IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>setAct(k));
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if((e.code==='Enter'||e.code==='KeyC')&&$('lobby').style.display==='none'){e.preventDefault();$('ci').focus();return}keys[e.code]=1;const k=e.code;
- if(k==='KeyH')setAct('hug');if(k==='KeyK')setAct('kiss');if(k==='KeyG')setAct('lead');if(k==='KeyF')setAct('follow');if(k==='KeyX')me.act!=='none'&&setAct(me.act)});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();if(!e.repeat)wantJump=true}if(!e.repeat&&'KeyW KeyA KeyS KeyD ArrowUp ArrowDown ArrowLeft ArrowRight'.split(' ').includes(e.code)){const n=performance.now();if(lastTap.c===e.code&&n-lastTap.t<300)me.run=true;lastTap={c:e.code,t:n}}if((e.code==='Enter'||e.code==='KeyC')&&$('lobby').style.display==='none'){e.preventDefault();$('ci').focus();return}keys[e.code]=1;const k=e.code;
+ if(k==='KeyH')setAct('hug');if(k==='KeyK')setAct('kiss');if(k==='KeyG')setAct('lead');if(k==='KeyF')setAct('follow');if(k==='KeyT')setAct('sit');if(k==='KeyB')setAct('lie');if(k==='KeyL')setAct('lap');if(k==='KeyX')me.act!=='none'&&setAct(me.act)});
 addEventListener('keyup',e=>keys[e.code]=0);
-cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
+cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}if(LOW.includes(me.act))setAct(me.act);me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
 function partner(){if(!remote){remObj=null;return null}
- if(!remObj)remObj={x:remote.x,y:remote.y};const r=remObj,d=remote;r.s=d;r.act=d.act;r.c=+d.c||0x6aa7ff;r.fx=d.fx;r.dx=d.dx;r.dy=d.dy;r.mv=d.mv;r.say=peerSay;return r}
+ if(!remObj)remObj={x:remote.x,y:remote.y};const r=remObj,d=remote;r.s=d;r.act=d.act;r.c=+d.c||0x6aa7ff;r.fx=d.fx;r.dx=d.dx;r.dy=d.dy;r.mv=d.mv;r.say=peerSay;r.jzt=d.jz||0;return r}
 function pairing(P){if(!P||Math.hypot(P.x-me.x,P.y-me.y)>400)return null;const a=me.act,b=P.act;
- if((a==='hug'||a==='kiss')&&a===b)return a;if((a==='follow'&&b==='lead')||(a==='lead'&&b==='follow'))return'hold';return null}
+ if((a==='hug'||a==='kiss')&&a===b)return a;if((a==='follow'&&b==='lead')||(a==='lead'&&b==='follow'))return'hold';if(a==='lap'&&b==='sit')return'lapL';if(a==='sit'&&b==='lap')return'lapS';return null}
 function hands(c,o,pk,t){const bob=c.mv?Math.sin(t*10)*2:0;let L={x:c.x-15,y:c.y-16+bob},R={x:c.x+15,y:c.y-16-bob};
  if(c.act==='hug'){if(pk==='hug'){const u=Math.sign(o.x-c.x)||1,B={x:o.x+u*13,y:o.y-24};L={x:B.x,y:B.y-3};R={x:B.x,y:B.y+3}}else{L={x:c.x-32,y:c.y-30};R={x:c.x+32,y:c.y-30}}}
  else if(c.act==='kiss'){if(pk==='kiss'){L={x:o.x-8,y:o.y-40};R={x:o.x+8,y:o.y-40}}else{L={x:c.x-7,y:c.y-26};R={x:c.x+7,y:c.y-26}}}
+ else if(c.act==='sit'){L={x:c.x-12,y:c.y-7};R={x:c.x+12,y:c.y-7};if(pk==='lapS'){const T={x:o.x+o.fx*20,y:o.y-17};if(o.x>=c.x)R=T;else L=T}}
  else if(c.act==='lead'||c.act==='follow'){if(pk==='hold'){const M={x:(c.x+o.x)/2,y:(c.y+o.y)/2-16};if(o.x>=c.x)R=M;else L=M}
   else{const h={x:c.x+c.fx*30,y:c.y-22};if(c.fx>0)R=h;else L=h}}
  return{L,R}}
 function drawChar(c,o,pk,t){const col=hex(c.c),h=hands(c,o||c,pk,t),mv=c.mv&&!pk||(c.mv&&c.act==='lead'),sw=mv?Math.sin(t*10)*4:0;
- ctx.fillStyle='#0003';ctx.beginPath();ctx.ellipse(c.x,c.y+2,15,5,0,0,7);ctx.fill();
+ ctx.fillStyle='#0003';ctx.beginPath();ctx.ellipse(c.x,c.y+2,15,5,0,0,7);ctx.fill();ctx.save();ctx.translate(0,-(c.jz||0));const lying=c.act==='lie'||c.act==='lap',sitting=c.act==='sit';
+ if(lying)drawLie(c);else{if(sitting)ctx.translate(0,6);
  ctx.strokeStyle='#5a4a63';ctx.lineWidth=4;ctx.lineCap='round';
- ctx.beginPath();ctx.moveTo(c.x-5,c.y-7);ctx.lineTo(c.x-5+sw,c.y);ctx.moveTo(c.x+5,c.y-7);ctx.lineTo(c.x+5-sw,c.y);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(c.x-5,c.y-7);ctx.lineTo(c.x-5+(sitting?c.fx*12:sw),sitting?c.y-6:c.y);ctx.moveTo(c.x+5,c.y-7);ctx.lineTo(c.x+5+(sitting?c.fx*12:-sw),sitting?c.y-6:c.y);ctx.stroke();
  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(c.x-12,c.y-32,24,26,8);ctx.fill();
  ctx.strokeStyle=col;ctx.lineWidth=5;
  [[c.x-10,h.L],[c.x+10,h.R]].forEach(([sx,p])=>{ctx.beginPath();ctx.moveTo(sx,c.y-26);ctx.lineTo(p.x,p.y);ctx.stroke()});
@@ -106,25 +108,33 @@ function drawChar(c,o,pk,t){const col=hex(c.c),h=hands(c,o||c,pk,t),mv=c.mv&&!pk
  ctx.fillStyle='#4a3350';ctx.beginPath();ctx.arc(hx,hy-1,11.5,Math.PI,0);ctx.fill();
  ctx.fillStyle='#222';[-4,4].forEach(e=>{ctx.beginPath();ctx.arc(hx+e+c.fx*2,hy+1,1.6,0,7);ctx.fill()});
  ctx.strokeStyle='#c0506f';ctx.lineWidth=1.3;ctx.beginPath();
- if(pk==='kiss')ctx.arc(hx+c.fx*3,hy+6,1.8,0,7);else ctx.arc(hx+c.fx*2,hy+4,3,.2,Math.PI-.2);ctx.stroke();
+ if(pk==='kiss')ctx.arc(hx+c.fx*3,hy+6,1.8,0,7);else ctx.arc(hx+c.fx*2,hy+4,3,.2,Math.PI-.2);ctx.stroke();if(sitting)ctx.translate(0,-6)}
  if(c.say&&performance.now()<c.say.until){ctx.font='11px system-ui,sans-serif';const ls=[];let cur='';for(const w of c.say.t.split(' ')){const n=cur?cur+' '+w:w;if(ctx.measureText(n).width>130&&cur){ls.push(cur);cur=w}else cur=n}ls.push(cur);ls.length=Math.min(ls.length,4);
-  const bw=Math.max(...ls.map(l=>ctx.measureText(l).width))+14,bh=ls.length*14+8,bx=c.x-bw/2,by=c.y-62-bh;ctx.fillStyle='#fffffff0';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,8);ctx.fill();ctx.fillStyle='#2a2447';ls.forEach((l,i)=>ctx.fillText(l,bx+7,by+14+i*14))}}
+  const bw=Math.max(...ls.map(l=>ctx.measureText(l).width))+14,bh=ls.length*14+8,bx=c.x-bw/2,by=c.y-(lying?34:sitting?56:62)-bh;ctx.fillStyle='#fffffff0';ctx.beginPath();ctx.roundRect(bx,by,bw,bh,8);ctx.fill();ctx.fillStyle='#2a2447';ls.forEach((l,i)=>ctx.fillText(l,bx+7,by+14+i*14))}ctx.restore()}
+function drawLie(c){const f=c.fx||1,col=hex(c.c),hx=c.x+f*20,hy=c.y-10;
+ ctx.strokeStyle='#5a4a63';ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x-f*12,c.y-9);ctx.lineTo(c.x-f*30,c.y-9);ctx.moveTo(c.x-f*12,c.y-4);ctx.lineTo(c.x-f*30,c.y-4);ctx.stroke();
+ ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(c.x-14,c.y-18,28,16,7);ctx.fill();
+ ctx.fillStyle=SKIN;[-12,-6].forEach(b=>{ctx.beginPath();ctx.arc(c.x+f*7,c.y+b,4,0,7);ctx.fill()});
+ ctx.beginPath();ctx.arc(hx,hy,10,0,7);ctx.fill();ctx.fillStyle='#4a3350';ctx.beginPath();ctx.arc(hx,hy-1,10.5,Math.PI,0);ctx.fill();
+ ctx.strokeStyle='#222';ctx.lineWidth=1.3;[-4,4].forEach(e=>{ctx.beginPath();ctx.arc(hx+e,hy+1,2,0,Math.PI);ctx.stroke()});
+ ctx.font='14px serif';ctx.fillText('💤',hx-6,hy-16)}
 function tree(t){ctx.fillStyle='#8a6a55';ctx.fillRect(t.x-5*t.s,t.y-22*t.s,10*t.s,22*t.s);
  ctx.fillStyle=t.c;ctx.beginPath();ctx.arc(t.x,t.y-38*t.s,26*t.s,0,7);ctx.arc(t.x-14*t.s,t.y-28*t.s,16*t.s,0,7);ctx.arc(t.x+14*t.s,t.y-28*t.s,16*t.s,0,7);ctx.fill()}
 let last=performance.now();
 function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000,.1);last=now;const t=now/1000,k=1-Math.exp(-12*dt);
  const P=partner();
- if(P){P.x+=(P.s.x-P.x)*k;P.y+=(P.s.y-P.y)*k}
- const pk=pairing(P),locked=pk==='hug'||pk==='kiss'||(pk==='hold'&&me.act==='follow');
+ if(P){P.x+=(P.s.x-P.x)*k;P.y+=(P.s.y-P.y)*k;P.jz=(P.jz||0)+((P.jzt||0)-(P.jz||0))*k}
+ const pk=pairing(P),locked=pk==='lapL'||pk==='hug'||pk==='kiss'||(pk==='hold'&&me.act==='follow');
  if(!locked){let vx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),vy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
-  if(vx||vy)me.tx=me.ty=null;else if(me.tx!=null){const ex=me.tx-me.x,ey=me.ty-me.y,d=Math.hypot(ex,ey);if(d<6)me.tx=me.ty=null;else{vx=ex/d;vy=ey/d}}
-  const l=Math.hypot(vx,vy);me.mv=l>0;
-  if(l){vx/=l;vy/=l;me.x+=vx*140*dt;me.y+=vy*140*dt;me.dx=vx;me.dy=vy;if(Math.abs(vx)>.2)me.fx=Math.sign(vx)}}
+  if((vx||vy)&&LOW.includes(me.act))setAct(me.act);if(vx||vy)me.tx=me.ty=null;else if(me.tx!=null){const ex=me.tx-me.x,ey=me.ty-me.y,d=Math.hypot(ex,ey);if(d<6)me.tx=me.ty=null;else{vx=ex/d;vy=ey/d}}
+  const l=Math.hypot(vx,vy);me.mv=l>0;if(!l)me.run=false;
+  if(l){vx/=l;vy/=l;const sp=(me.run||keys.ShiftLeft||keys.ShiftRight)?250:140;me.x+=vx*sp*dt;me.y+=vy*sp*dt;me.dx=vx;me.dy=vy;if(Math.abs(vx)>.2)me.fx=Math.sign(vx)}}
  else{me.tx=me.ty=null;let tx,ty;me.mv=false;
-  if(pk==='hold'){tx=P.x-P.dy*-34*-1;tx=P.x+(-P.dy)*34-P.dx*8;ty=P.y+P.dx*34-P.dy*8;me.fx=P.fx;me.dx=P.dx;me.dy=P.dy}
+  if(pk==='lapL'){tx=P.x+22*P.fx;ty=P.y+3;me.fx=-P.fx}else if(pk==='hold'){tx=P.x-P.dy*-34*-1;tx=P.x+(-P.dy)*34-P.dx*8;ty=P.y+P.dx*34-P.dy*8;me.fx=P.fx;me.dx=P.dx;me.dy=P.dy}
   else{const D=pk==='hug'?32:22,ex=P.x-me.x,ey=P.y-me.y,d=Math.hypot(ex,ey)||1;tx=(me.x+P.x)/2-ex/d*D/2;ty=(me.y+P.y)/2-ey/d*D/2;me.fx=Math.sign(ex)||1}
   const dd=Math.hypot(tx-me.x,ty-me.y);me.mv=pk==='hold'&&dd>4;me.x+=(tx-me.x)*Math.min(1,5*dt);me.y+=(ty-me.y)*Math.min(1,5*dt)}
  me.x=Math.max(20,Math.min(W-20,me.x));me.y=Math.max(40,Math.min(H-10,me.y));
+ if(wantJump&&me.jz===0&&!locked&&!LOW.includes(me.act))me.vz=300;wantJump=false;if(me.jz>0||me.vz>0){me.vz-=1000*dt;me.jz+=me.vz*dt;if(me.jz<=0){me.jz=0;me.vz=0}}
  camx=Math.max(0,Math.min(W-vw,me.x-vw/2));camy=Math.max(0,Math.min(H-vh,me.y-vh/2));if(vw>W)camx=(W-vw)/2;if(vh>H)camy=(H-vh)/2;
  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#2a2447';ctx.fillRect(0,0,innerWidth,innerHeight);
  ctx.setTransform(dpr*ZM,0,0,dpr*ZM,-camx*dpr*ZM,-camy*dpr*ZM);
@@ -139,13 +149,13 @@ function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000
  flies.forEach(f=>{ctx.fillStyle='rgba(255,243,168,'+(.5+.5*Math.sin(t*2+f.p))+')';ctx.beginPath();ctx.arc(f.x+Math.sin(t*.5+f.p)*30,f.y+Math.cos(t*.4+f.p)*20,2.5,0,7);ctx.fill()});
  if(pk&&(heartT+=dt)>.6){heartT=0;hearts.push({x:(me.x+P.x)/2+(Math.random()-.5)*14,y:Math.min(me.y,P.y)-60,a:0})}
  ctx.font='18px serif';hearts=hearts.filter(h=>(h.a+=dt)<1.8);hearts.forEach(h=>{ctx.globalAlpha=1-h.a/1.8;ctx.fillText('💗',h.x,h.y-h.a*30)});ctx.globalAlpha=1;
- if(conn&&conn.open&&now-lastSend>70){const o={x:Math.round(me.x),y:Math.round(me.y),fx:me.fx,dx:+me.dx.toFixed(2),dy:+me.dy.toFixed(2),act:me.act,c:me.c,mv:me.mv},j=JSON.stringify(o);
+ if(conn&&conn.open&&now-lastSend>70){const o={x:Math.round(me.x),y:Math.round(me.y),fx:me.fx,dx:+me.dx.toFixed(2),dy:+me.dy.toFixed(2),act:me.act,c:me.c,mv:me.mv,jz:Math.round(me.jz)},j=JSON.stringify(o);
   if(j!==lastJson){lastJson=j;lastSend=now;try{conn.send(o)}catch(e){}}}
  let s;if(!net)s='Modo solo — jogando sozinho.';
  else if(!P)s=hosting?'Sala '+roomName+' — passe este código para a outra pessoa 💌':'Conexão encerrada. Recarregue a página para entrar de novo.';
- else if(P.act!=='none'&&me.act==='none')s={hug:'💗 Querem te abraçar! Aperte H',kiss:'💗 Querem te beijar! Aperte K',lead:'💗 Querem te guiar pela mão! Aperte F',follow:'💗 Querem seguir você! Aperte G'}[P.act];
+ else if(P.act!=='none'&&me.act==='none')s={hug:'💗 Querem te abraçar! Aperte H',kiss:'💗 Querem te beijar! Aperte K',lead:'💗 Querem te guiar pela mão! Aperte F',follow:'💗 Querem seguir você! Aperte G',sit:'🪑 Sentou! Aperte L para deitar no colo',lie:'💤 Está deitado(a)',lap:'💗 Querem deitar no seu colo! Aperte T para sentar'}[P.act];
  else if(pk==='hold')s=me.act==='lead'?'Você está guiando — ande à vontade 💫':'Você está sendo guiado(a) pela mão 💫';
- else if(pk)s='💗';else if(me.act!=='none')s='Esperando a outra pessoa aceitar…';else s='Conectados — vocês dois estão no jardim ✨';
+ else if(pk==='lapL')s='Você está deitado(a) no colo 💤';else if(pk==='lapS')s='Alguém está no seu colo 💗';else if(pk)s='💗';else if(['hug','kiss','lead','follow','lap'].includes(me.act))s='Esperando a outra pessoa aceitar…';else s='Conectados — vocês dois estão no jardim ✨';
  if(st.textContent!==s)st.textContent=s}
 requestAnimationFrame(loop);
 </script></body></html>
