@@ -16,7 +16,8 @@ button.on{background:#ff6f9c;color:#fff}
 .box h2{margin:0 0 6px}.box input{font:inherit;font-size:16px;padding:12px 14px;border:0;border-radius:14px;background:#fffffff0;color:#2a2447}
 .row{display:flex;gap:8px}.row button{flex:1}.ghost{background:transparent;color:#fff;text-decoration:underline}
 #msg{min-height:20px;font-size:13px}
-#chat{position:fixed;top:calc(48px + env(safe-area-inset-top,0px));right:10px;width:min(260px,46vw);display:flex;flex-direction:column;gap:6px}
+#chat{position:fixed;bottom:calc(66px + env(safe-area-inset-bottom,0px));left:10px;width:min(260px,46vw);display:flex;flex-direction:column;gap:6px}
+@media(max-width:700px){#chat{bottom:calc(112px + env(safe-area-inset-bottom,0px))}}
 #log{max-height:150px;overflow-y:auto;font-size:13px;background:#0005;border-radius:10px;padding:6px 8px}#log:empty{display:none}
 .m{margin:2px 0;word-break:break-word}#chat .row{gap:6px}#ci{flex:1;min-width:0;border:0;border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;background:#fffffff0;color:#2a2447}#cs{padding:8px 12px;flex:0 0 auto}
 .col{display:flex;flex-direction:column;gap:10px}.hidden{display:none!important}
@@ -31,7 +32,7 @@ button.on{background:#ff6f9c;color:#fff}
 <div id="msg"></div><button id="solo" class="ghost">Jogar sozinho</button></div></div>
 <div id="st"></div>
 <div id="help">Toque/clique para andar · ou use W A S D / setas</div>
-<div id="chat"><div id="log"></div><div class="row"><input id="ci" maxlength="120" placeholder="Mensagem (Enter)" autocomplete="off"><button id="cs">➤</button></div></div>
+<div id="chat"><div id="log"></div><div class="row"><input id="ci" maxlength="120" placeholder="Mensagem (C ou Enter)" autocomplete="off"><button id="cs">➤</button></div></div>
 <div id="bar">
 <button id="b-hug">🤗 Abraço (H)</button><button id="b-kiss">💋 Beijo (K)</button>
 <button id="b-lead">🤝 Guiar (G)</button><button id="b-follow">🙋 Seguir (F)</button><button id="b-none">✖ Soltar (X)</button>
@@ -72,16 +73,16 @@ const q=new URLSearchParams(location.search).get('sala');if(q)$('rn').value=q.sl
 let peerSay=null;
 function addMsg(who,t){const d=document.createElement('div'),b=document.createElement('b');d.className='m';b.textContent=who+': ';d.append(b,document.createTextNode(t));const l=$('log');l.append(d);l.scrollTop=1e9;while(l.children.length>50)l.firstChild.remove()}
 function sendChat(){const t=$('ci').value.trim().slice(0,120);if(!t)return;$('ci').value='';if(conn&&conn.open)try{conn.send({chat:t})}catch(e){}addMsg('Você',t);me.say={t,until:performance.now()+6000}}
-$('cs').onclick=sendChat;$('ci').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')sendChat();if(e.key==='Escape')$('ci').blur()});
+$('cs').onclick=sendChat;$('ci').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'){sendChat();$('ci').blur()}if(e.key==='Escape')$('ci').blur()});
 function rs(){dpr=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';vw=innerWidth/ZM;vh=innerHeight/ZM}
 addEventListener('resize',rs);rs();
 const IDS=['hug','kiss','lead','follow','none'];
 function setAct(a){me.act=me.act===a?'none':a;IDS.forEach(k=>document.getElementById('b-'+k).classList.toggle('on',me.act===k&&k!=='none'))}
 IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>setAct(k));
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Enter'&&$('lobby').style.display==='none'){$('ci').focus();return}keys[e.code]=1;const k=e.code;
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if((e.code==='Enter'||e.code==='KeyC')&&$('lobby').style.display==='none'){e.preventDefault();$('ci').focus();return}keys[e.code]=1;const k=e.code;
  if(k==='KeyH')setAct('hug');if(k==='KeyK')setAct('kiss');if(k==='KeyG')setAct('lead');if(k==='KeyF')setAct('follow');if(k==='KeyX')me.act!=='none'&&setAct(me.act)});
 addEventListener('keyup',e=>keys[e.code]=0);
-cv.addEventListener('pointerdown',e=>{me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
+cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
 function partner(){if(!remote){remObj=null;return null}
  if(!remObj)remObj={x:remote.x,y:remote.y};const r=remObj,d=remote;r.s=d;r.act=d.act;r.c=+d.c||0x6aa7ff;r.fx=d.fx;r.dx=d.dx;r.dy=d.dy;r.mv=d.mv;r.say=peerSay;return r}
 function pairing(P){if(!P||Math.hypot(P.x-me.x,P.y-me.y)>400)return null;const a=me.act,b=P.act;
