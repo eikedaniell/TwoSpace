@@ -16,7 +16,7 @@ button.on{background:#ff6f9c;color:#fff}
 .box h2{margin:0 0 6px}.box input{font:inherit;font-size:16px;padding:12px 14px;border:0;border-radius:14px;background:#fffffff0;color:#2a2447}
 .row{display:flex;gap:8px}.row button{flex:1}.ghost{background:transparent;color:#fff;text-decoration:underline}
 #msg{min-height:20px;font-size:13px}
-#chat{position:fixed;top:calc(48px + env(safe-area-inset-top,0px));right:10px;width:min(260px,46vw);display:none;flex-direction:column;gap:6px}
+#chat{position:fixed;top:calc(48px + env(safe-area-inset-top,0px));right:10px;width:min(260px,46vw);display:flex;flex-direction:column;gap:6px}
 #log{max-height:150px;overflow-y:auto;font-size:13px;background:#0005;border-radius:10px;padding:6px 8px}#log:empty{display:none}
 .m{margin:2px 0;word-break:break-word}#chat .row{gap:6px}#ci{flex:1;min-width:0;border:0;border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;background:#fffffff0;color:#2a2447}#cs{padding:8px 12px;flex:0 0 auto}
 .col{display:flex;flex-direction:column;gap:10px}.hidden{display:none!important}
@@ -52,10 +52,10 @@ const $=id=>document.getElementById(id),msg=$('msg');
 const PREF='espacoadois-sala-',CFG={config:{iceServers:['stun.l.google.com','stun1.l.google.com','stun2.l.google.com'].map(h=>({urls:'stun:'+h+':19302'}))}};
 const rcode=()=>{const l='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:4},()=>l[Math.random()*l.length|0]).join('')};
 let peer=null;
-function setupConn(c){c.on('open',()=>{conn=c;lastJson='';$('lobby').style.display='none';$('chat').style.display='flex'});
+function setupConn(c){c.on('open',()=>{conn=c;lastJson='';$('lobby').style.display='none'});
  c.on('data',d=>{if(d&&typeof d.chat==='string'){const t=d.chat.slice(0,120);addMsg('Parceiro(a)',t);peerSay={t,until:performance.now()+6000};return}
- if(d&&d.full){$('chat').style.display='none';msg.textContent='Sala cheia (só 2 pessoas).';$('lobby').style.display='flex';conn=null;net=false;return}if(d&&typeof d.x==='number')remote=d});
- c.on('close',()=>{conn=null;remote=null;$('chat').style.display='none'});c.on('error',()=>{})}
+ if(d&&d.full){msg.textContent='Sala cheia (só 2 pessoas).';$('lobby').style.display='flex';conn=null;net=false;return}if(d&&typeof d.x==='number')remote=d});
+ c.on('close',()=>{conn=null;remote=null});c.on('error',()=>{})}
 function create(t=0){if(typeof Peer==='undefined'){msg.textContent='PeerJS não carregou. Verifique a internet.';return}
  if(peer)peer.destroy();net=true;hosting=true;const cod=rcode();roomName=cod;peer=new Peer(PREF+cod,CFG);
  peer.on('open',()=>{$('code').textContent=cod;$('menu').classList.add('hidden');$('wait').classList.remove('hidden');msg.textContent=''});
@@ -71,14 +71,14 @@ $('solo').onclick=()=>{$('lobby').style.display='none'};
 const q=new URLSearchParams(location.search).get('sala');if(q)$('rn').value=q.slice(0,4).toUpperCase();
 let peerSay=null;
 function addMsg(who,t){const d=document.createElement('div'),b=document.createElement('b');d.className='m';b.textContent=who+': ';d.append(b,document.createTextNode(t));const l=$('log');l.append(d);l.scrollTop=1e9;while(l.children.length>50)l.firstChild.remove()}
-function sendChat(){const t=$('ci').value.trim().slice(0,120);if(!t||!conn||!conn.open)return;$('ci').value='';try{conn.send({chat:t})}catch(e){}addMsg('Você',t);me.say={t,until:performance.now()+6000}}
+function sendChat(){const t=$('ci').value.trim().slice(0,120);if(!t)return;$('ci').value='';if(conn&&conn.open)try{conn.send({chat:t})}catch(e){}addMsg('Você',t);me.say={t,until:performance.now()+6000}}
 $('cs').onclick=sendChat;$('ci').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')sendChat();if(e.key==='Escape')$('ci').blur()});
 function rs(){dpr=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';vw=innerWidth/ZM;vh=innerHeight/ZM}
 addEventListener('resize',rs);rs();
 const IDS=['hug','kiss','lead','follow','none'];
 function setAct(a){me.act=me.act===a?'none':a;IDS.forEach(k=>document.getElementById('b-'+k).classList.toggle('on',me.act===k&&k!=='none'))}
 IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>setAct(k));
-addEventListener('keydown',e=>{if(e.code==='Enter'&&conn&&conn.open){$('ci').focus();return}keys[e.code]=1;const k=e.code;
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Enter'&&$('lobby').style.display==='none'){$('ci').focus();return}keys[e.code]=1;const k=e.code;
  if(k==='KeyH')setAct('hug');if(k==='KeyK')setAct('kiss');if(k==='KeyG')setAct('lead');if(k==='KeyF')setAct('follow');if(k==='KeyX')me.act!=='none'&&setAct(me.act)});
 addEventListener('keyup',e=>keys[e.code]=0);
 cv.addEventListener('pointerdown',e=>{me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
