@@ -46,13 +46,15 @@ button.on{background:#ff6f9c;color:#fff}
 #ctx button:hover{background:#ffffff26}#ctx .has{position:relative}
 #ctx .sub{display:none;position:absolute;left:calc(100% - 2px);top:-6px;background:#2a2447f2;border-radius:12px;padding:6px;min-width:170px;box-shadow:0 6px 20px #0008}
 #ctx .has:hover .sub,#ctx .has.open .sub{display:block}#ctx.flip .sub{left:auto;right:calc(100% - 2px)}
+#telap{width:min(440px,94vw)}#telap .row input{flex:1 1 auto}#telap .row button{flex:0 0 auto}.vi{box-sizing:border-box}#t-res,#t-pl{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin:6px 0}#t-keyrow{margin:6px 0}#t-keyrow .hint{font-size:11px;opacity:.75;margin-top:4px;line-height:1.35}
+#t-plh{font-size:12px;opacity:.8;margin-top:8px;font-weight:600}
+.vi{display:flex;gap:8px;align-items:center;width:100%;padding:4px 6px;border:0;border-radius:10px;background:#ffffff14;color:#fff;text-align:left;font-size:12px;cursor:pointer}.vi:hover{background:#ffffff26}.vi.on{background:#ff6f9c}
+.vi img{width:80px;height:45px;object-fit:cover;border-radius:6px;flex:0 0 auto;background:#0006}.vi b{display:block;font-weight:600;line-height:1.2}.vi small{opacity:.7}.vi .x{margin-left:auto;padding:4px 8px;border-radius:8px;background:#ffffff2e;color:#fff;font-size:12px;flex:0 0 auto}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="lobby"><div class="box"><h2>💞 Espaço a Dois</h2>
 <input id="un" placeholder="Seu nome de usuário" maxlength="16" autocomplete="off">
-<div id="menu" class="col"><button id="mk">Criar sala</button><div>ou entre numa sala existente</div>
-<div class="row"><input id="rn" maxlength="4" placeholder="CÓDIGO" aria-label="Código da sala" autocomplete="off"><button id="jn">Entrar</button></div></div>
-<div id="wait" class="col hidden"><div>Passe este código para a outra pessoa:</div><div id="code">----</div><div>Esperando alguém entrar…</div></div>
+<div id="menu" class="col"><button id="pub">🌐 Entrar na sala pública</button><div style="font-size:12px;opacity:.85">Sala aberta para até 2 pessoas. Se alguém sair, outra pessoa pode entrar.</div></div>
 <div id="msg"></div><button id="solo" class="ghost">Jogar sozinho</button></div></div>
 <div id="st"></div>
 <div id="help">Clique/toque ou W A S D para andar · Shift ou 2 toques = correr · Espaço = pular<br>I = inventário · teclas 1 a 9 e 0 = ações<br>M = mapa · no cinema, 6 perto de um sofá = sentar olhando a tela</div>
@@ -66,7 +68,10 @@ button.on{background:#ff6f9c;color:#fff}
 <div id="invp" class="hidden"><h4>Com a outra pessoa</h4><div class="grid"><button id="b-hug"><span>🤗</span>Abraço<small>1</small></button><button id="b-kiss"><span>💋</span>Beijo<small>2</small></button><button id="b-lead"><span>🤝</span>Guiar<small>3</small></button><button id="b-follow"><span>🙋</span>Seguir<small>4</small></button><button id="b-lap"><span>😴</span>Deitar no colo<small>5</small></button></div><h4>Poses</h4><div class="grid"><button id="b-sit"><span>🪑</span>Sentar<small>6</small></button><button id="b-lie"><span>🛌</span>Dormir<small>7</small></button><button id="b-back"><span>🌤</span>Barriga pra cima<small>8</small></button><button id="b-crawl"><span>🐛</span>Rastejar<small>9</small></button></div><h4></h4><div class="grid" style="grid-template-columns:1fr"><button id="b-none"><span>✖</span>Soltar / levantar<small>0</small></button></div></div>
 <div id="mapp" class="hidden"><h4>🗺 Mapa — para onde você quer ir?</h4><div class="mapbox"><svg viewBox="0 0 300 190" preserveAspectRatio="none"><path d="M70 120 C 120 60, 170 150, 235 70" fill="none" stroke="#f3e2b8" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 14"/></svg>
 <button class="pin on" id="m-g" style="left:8%;top:48%"><span>🌳</span>Jardim</button><button class="pin" id="m-c" style="left:62%;top:10%"><span>🎬</span>Cinema</button></div><div id="mmsg">Ir até lá leva só você. A outra pessoa escolhe o próprio destino.</div></div>
-<div id="telap" class="hidden"><div class="row" style="margin:0 0 10px"><input id="t-url" placeholder="Cole o link do YouTube" autocomplete="off"><button id="t-yt">▶ YouTube</button></div><div class="grid" style="grid-template-columns:1fr 1fr"><button id="t-scr"><span>🖥</span>Transmitir tela</button><button id="t-vid"><span>🎞</span>Reproduzir vídeo</button></div>
+<div id="telap" class="hidden"><div class="row" style="margin:0 0 6px"><input id="t-q" placeholder="🔎 Buscar no YouTube" autocomplete="off"><button id="t-qb">Buscar</button><button id="t-keyg" title="Chave da API">🔑</button></div>
+<div id="t-keyrow" class="hidden"><div class="row" style="margin:0"><input id="t-key" placeholder="Cole sua chave da YouTube Data API v3" autocomplete="off"><button id="t-keyb">Salvar</button></div><div class="hint">Chave grátis: Google Cloud Console → ative "YouTube Data API v3" → Credenciais → Chave de API. Cada busca gasta 100 do limite diário de 10.000 (cerca de 100 buscas por dia). A chave fica só neste navegador.</div></div>
+<div id="t-res"></div><div id="t-plh" class="hidden">📋 Lista de reprodução (compartilhada)</div><div id="t-pl"></div>
+<div class="row" style="margin:8px 0 10px"><input id="t-url" placeholder="Cole o link do YouTube" autocomplete="off"><button id="t-yt">▶ YouTube</button></div><div class="grid" style="grid-template-columns:1fr 1fr"><button id="t-scr"><span>🖥</span>Transmitir tela</button><button id="t-vid"><span>🎞</span>Reproduzir vídeo</button></div>
 <div id="tctl" class="hidden"><button id="t-pp">⏸ Pausar</button><input id="t-seek" type="range" min="0" max="1000" value="0"><span id="t-time">0:00</span></div>
 <div class="row"><span>🔊</span><input id="t-vol" type="range" min="0" max="100" value="100"></div>
 <button id="t-stop" class="hidden">⏹ Parar transmissão</button><div id="tmsg"></div><input type="file" id="t-file" accept="video/*" hidden></div>
@@ -92,23 +97,25 @@ const rcode=()=>{const l='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({l
 let peer=null;
 function setupConn(c){c.on('open',()=>{conn=c;pushStream();ytSync();try{c.send({typing:!!me.typing})}catch(e){}lastJson='';$('lobby').style.display='none'});
  c.on('data',d=>{if(d&&d.yt){ytRemote(d);return}if(d&&typeof d.typing==='boolean'){peerTyping=d.typing;return}if(d&&typeof d.chat==='string'){peerTyping=false;const t=d.chat.slice(0,120);addMsg((remote&&remote.n)||'Parceiro(a)',t);peerSays=peerSays.filter(b=>b.until>performance.now()).concat({t,until:performance.now()+6000});return}
- if(d&&d.full){msg.textContent='Sala cheia (só 2 pessoas).';$('lobby').style.display='flex';conn=null;net=false;return}if(d&&typeof d.x==='number')remote=d});
- c.on('close',()=>{conn=null;remote=null;peerTyping=false});c.on('error',()=>{})}
+ if(d&&d.full){msg.textContent='A sala pública está cheia (2/2). Tente de novo em instantes.';pubOn=false;pubClean();$('lobby').style.display='flex';conn=null;net=false;return}if(d&&typeof d.x==='number')remote=d});
+ c.on('close',()=>{conn=null;remote=null;peerTyping=false;if(pubOn&&!hosting)setTimeout(pubStart,600+Math.random()*900)});c.on('error',()=>{})}
 function getName(){let n=$('un').value.replace(/\s+/g,' ').trim().slice(0,16)||'Jogador';try{localStorage.setItem('ed2name',n)}catch(e){}return n}
 try{$('un').value=localStorage.getItem('ed2name')||''}catch(e){}
-function create(t=0){if(typeof Peer==='undefined'){msg.textContent='PeerJS não carregou. Verifique a internet.';return}
- me.name=getName();if(peer)peer.destroy();net=true;hosting=true;const cod=rcode();roomName=cod;peer=new Peer(PREF+cod,CFG);peer.on('call',onCall);
- peer.on('open',()=>{$('code').textContent=cod;$('menu').classList.add('hidden');$('wait').classList.remove('hidden');msg.textContent=''});
- peer.on('error',e=>{if(e.type==='unavailable-id'&&t<5)return create(t+1);net=false;msg.textContent='Erro ao criar sala: '+e.type});
- peer.on('connection',c=>{if(conn&&conn.open){c.on('open',()=>{c.send({full:1});setTimeout(()=>c.close(),300)});return}setupConn(c)})}
-function join(){if(typeof Peer==='undefined'){msg.textContent='PeerJS não carregou. Verifique a internet.';return}
- const cod=$('rn').value.trim().toUpperCase();if(cod.length!==4){msg.textContent='Digite o código de 4 letras.';return}
- me.name=getName();if(peer)peer.destroy();net=true;hosting=false;msg.textContent='Conectando…';peer=new Peer(CFG);peer.on('call',onCall);
- peer.on('error',e=>{net=false;msg.textContent=e.type==='peer-unavailable'?'Sala não encontrada. Confira o código.':'Erro de conexão ('+e.type+').'});
- peer.on('open',()=>{setupConn(peer.connect(PREF+cod));setTimeout(()=>{if(!conn&&net)msg.textContent='Não conectou. Confira o código ou desative AdBlock/VPN.'},10000)})}
-$('mk').onclick=()=>create();$('jn').onclick=join;$('rn').addEventListener('keydown',e=>{if(e.key==='Enter')join()});
+const PUB=PREF+'sala-publica';let pubTry=0,pubOn=false;
+function pubClean(){if(peer){try{peer.destroy()}catch(e){}peer=null}}
+function wirePeer(){peer.on('call',onCall);peer.on('disconnected',()=>{try{peer&&peer.reconnect()}catch(e){}})}
+function pubFail(t){net=false;pubOn=false;hosting=false;pubClean();$('lobby').style.display='flex';msg.textContent='Não foi possível entrar na sala ('+t+'). Tente de novo.'}
+function pubStart(){if(typeof Peer==='undefined'){msg.textContent='PeerJS não carregou. Verifique a internet.';return}
+ pubOn=true;net=true;hosting=false;msg.textContent='Entrando na sala pública…';pubClean();
+ const p=peer=new Peer(CFG);wirePeer();let settled=false;
+ p.on('error',e=>{if(peer!==p||settled)return;settled=true;if(e.type==='peer-unavailable')pubHost();else pubFail(e.type)});
+ p.on('open',()=>{if(peer!==p)return;const c=p.connect(PUB);setupConn(c);c.on('open',()=>{settled=true;pubTry=0});setTimeout(()=>{if(peer===p&&!settled&&!conn){settled=true;pubHost()}},8000)})}
+function pubHost(){pubClean();hosting=true;const p=peer=new Peer(PUB,CFG);wirePeer();
+ p.on('open',()=>{if(peer!==p)return;pubTry=0;roomName='pública';$('lobby').style.display='none';msg.textContent=''});
+ p.on('error',e=>{if(peer!==p)return;if(e.type==='unavailable-id'&&pubTry++<8){hosting=false;msg.textContent='Entrando na sala pública…';setTimeout(pubStart,500+Math.random()*900)}else pubFail(e.type)});
+ p.on('connection',c=>{if(conn&&conn.open){c.on('open',()=>{c.send({full:1});setTimeout(()=>c.close(),300)});return}setupConn(c)})}
+$('pub').onclick=()=>{me.name=getName();pubTry=0;pubStart()};
 $('solo').onclick=()=>{me.name=getName();$('lobby').style.display='none'};
-const q=new URLSearchParams(location.search).get('sala');if(q)$('rn').value=q.slice(0,4).toUpperCase();
 let peerSays=[],peerTyping=false;
 function addMsg(who,t){const d=document.createElement('div'),b=document.createElement('b');d.className='m';b.textContent=who+': ';d.append(b,document.createTextNode(t));const l=$('log');l.append(d);l.scrollTop=1e9;while(l.children.length>50)l.firstChild.remove()}
 function sendChat(){const t=$('ci').value.trim().slice(0,120);if(!t)return;$('ci').value='';if(conn&&conn.open)try{conn.send({chat:t})}catch(e){}setTyping(false);addMsg('Você',t);me.says=(me.says||[]).filter(b=>b.until>performance.now()).concat({t,until:performance.now()+6000})}
@@ -123,11 +130,11 @@ const IDS=['hug','kiss','lead','follow','sit','lie','back','crawl','lap','none']
 function setAct(a){const old=me.act;me.act=old===a?'none':a;
  if(old==='sit'&&me.act!=='sit'&&me.seat>=0){me.y=SEATS[me.seat].y+45;me.seat=-1}
  if(me.act==='sit'&&RM==='c'){let best=-1,bd=170;SEATS.forEach((q,i)=>{const d=Math.hypot(q.x-me.x,q.y-me.y);if(d<bd&&!(curP&&curP.act==='sit'&&curP.seat===i)){bd=d;best=i}});me.seat=best}else if(me.act!=='sit')me.seat=-1;IDS.forEach(k=>document.getElementById('b-'+k).classList.toggle('on',me.act===k&&k!=='none'));$('inv').classList.toggle('on',me.act!=='none')}
-IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>{setAct(k);$('invp').classList.add('hidden')});document.getElementById('inv').onclick=()=>document.getElementById('invp').classList.toggle('hidden');
+IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>{setAct(k);$('invp').classList.add('hidden')});document.getElementById('inv').onclick=()=>togglePanel('invp');
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(profWho){if(e.code==='Escape')closeProf();return}if(e.code==='Space'){e.preventDefault();if(!e.repeat)wantJump=true}if(!e.repeat&&'KeyW KeyA KeyS KeyD ArrowUp ArrowDown ArrowLeft ArrowRight'.split(' ').includes(e.code)){const n=performance.now();if(lastTap.c===e.code&&n-lastTap.t<300)me.run=true;lastTap={c:e.code,t:n}}if((e.code==='Enter'||e.code==='KeyC')&&$('lobby').style.display==='none'){e.preventDefault();$('ci').focus();return}keys[e.code]=1;const k=e.code;
- if(k==='KeyI')$('invp').classList.toggle('hidden');if(k==='KeyM')$('mapp').classList.toggle('hidden');if(k==='Escape'){$('invp').classList.add('hidden');$('telap').classList.add('hidden');$('mapp').classList.add('hidden');closeCtx()}{const ac=ACTK[e.key];if(ac==='none'){if(me.act!=='none')setAct(me.act)}else if(ac)setAct(ac)}});
+ if(k==='KeyI')togglePanel('invp');if(k==='KeyM')togglePanel('mapp');if(k==='Escape'){$('invp').classList.add('hidden');$('telap').classList.add('hidden');$('mapp').classList.add('hidden');closeCtx()}{const ac=ACTK[e.key];if(ac==='none'){if(me.act!=='none')setAct(me.act)}else if(ac)setAct(ac)}});
 addEventListener('keyup',e=>keys[e.code]=0);
-cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}if(!$('invp').classList.contains('hidden')){$('invp').classList.add('hidden');return}if(!$('telap').classList.contains('hidden')){$('telap').classList.add('hidden');return}if(!$('mapp').classList.contains('hidden')){$('mapp').classList.add('hidden');return}if(!$('ctx').classList.contains('hidden')){closeCtx();return}{const wx=camx+e.clientX/ZM,wy=camy+e.clientY/ZM;if(RM==='c'&&wx>=SX&&wx<=SX+SW&&wy>=SY&&wy<=SY+SH){screenClick();return}}const hh=hitTest(camx+e.clientX/ZM,camy+e.clientY/ZM);if(hh==='p'){openCtx(e.clientX,e.clientY);return}if(hh){openProf(hh);return}{const si=seatAt(camx+e.clientX/ZM,camy+e.clientY/ZM);if(si>=0){sitSeat(si);return}}if(LOW.includes(me.act))setAct(me.act);me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
+cv.addEventListener('pointerdown',e=>{if(e.button!==0)return;if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}if(!$('invp').classList.contains('hidden')){$('invp').classList.add('hidden');return}if(!$('telap').classList.contains('hidden')){$('telap').classList.add('hidden');return}if(!$('mapp').classList.contains('hidden')){$('mapp').classList.add('hidden');return}if(!$('ctx').classList.contains('hidden')){closeCtx();return}{const wx=camx+e.clientX/ZM,wy=camy+e.clientY/ZM;if(RM==='c'&&wx>=SX&&wx<=SX+SW&&wy>=SY&&wy<=SY+SH){screenClick();return}if(RM==='c'&&wy<FY)return}const cx_=camx+e.clientX/ZM,cy_=camy+e.clientY/ZM,si=seatAt(cx_,cy_),hh=hitTest(cx_,cy_,si>=0);if(hh==='p'){openCtx(e.clientX,e.clientY);return}if(hh){openProf(hh);return}if(si>=0){sitSeat(si);return}if(LOW.includes(me.act))setAct(me.act);me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
 function partner(){if(!remote){remObj=null;return null}
  if(!remObj)remObj={x:remote.x,y:remote.y};const r=remObj,d=remote,rmv=d.rm||'g';if(r.rmx!==rmv){r.x=d.x;r.y=d.y}r.s=d;r.act=d.act;r.c=+d.c||0x6aa7ff;r.fx=d.fx;r.dx=d.dx;r.dy=d.dy;r.mv=d.mv;r.says=peerSays;r.name=typeof d.n==='string'?d.n.slice(0,16):'';r.bd=d.bd|0;r.ht=d.ht|0;r.hr=d.hr|0;r.sx=d.sx|0;r.coins=d.co|0;r.typing=peerTyping;r.jzt=d.jz||0;r.seat=d.sa>=0?d.sa:-1;r.rmx=rmv;return rmv===RM?r:null}
 function pairing(P){if(!P||Math.hypot(P.x-me.x,P.y-me.y)>400)return null;const a=me.act,b=P.act;
@@ -239,13 +246,13 @@ if(RM==='g'){flies.forEach(f=>{ctx.fillStyle='rgba(255,243,168,'+(.5+.5*Math.sin
  if(conn&&conn.open&&now-lastSend>70){const o={x:Math.round(me.x),y:Math.round(me.y),fx:me.fx,dx:+me.dx.toFixed(2),dy:+me.dy.toFixed(2),act:me.act,c:me.c,mv:me.mv,jz:Math.round(me.jz),rm:RM,sa:me.seat,n:me.name,bd:me.bd,ht:me.ht,hr:me.hr,sx:me.sx,co:me.coins},j=JSON.stringify(o);
   if(j!==lastJson){lastJson=j;lastSend=now;try{conn.send(o)}catch(e){}}}
  let s;if(!net)s='Modo solo — jogando sozinho.';
- else if(!P&&remote)s=(remote.n||'A outra pessoa')+' está '+(remote.rm==='c'?'no Cinema 🎬':'no Jardim 🌳')+' — abra o mapa (M) para ir até lá';else if(!P)s=hosting?'Sala '+roomName+' — passe este código para a outra pessoa 💌':'Conexão encerrada. Recarregue a página para entrar de novo.';
+ else if(!P&&remote)s=(remote.n||'A outra pessoa')+' está '+(remote.rm==='c'?'no Cinema 🎬':'no Jardim 🌳')+' — abra o mapa (M) para ir até lá';else if(!P)s=hosting?'Sala pública — aguardando a outra pessoa entrar 🌐':(pubOn?'Reconectando à sala pública…':'Conexão encerrada. Recarregue a página para entrar de novo.');
  else if(P.act!=='none'&&me.act==='none')s={hug:'💗 Querem te abraçar! Aperte 1',kiss:'💗 Querem te beijar! Aperte 2',lead:'💗 Querem te guiar pela mão! Aperte 4',follow:'💗 Querem seguir você! Aperte 3',sit:'🪑 Sentou! Aperte 5 para deitar no colo',lie:'💤 Está dormindo',back:'🌤 Está descansando de barriga pra cima',crawl:'🐛 Está rastejando',lap:'💗 Querem deitar no seu colo! Aperte 6 para sentar'}[P.act];
  else if(pk==='hold')s=me.act==='lead'?'Você está guiando — ande à vontade 💫':'Você está sendo guiado(a) pela mão 💫';
  else if(pk==='lapL')s='Você está deitado(a) no colo 💤';else if(pk==='lapS')s='Alguém está no seu colo 💗';else if(pk)s='💗';else if(['hug','kiss','lead','follow','lap'].includes(me.act))s='Esperando a outra pessoa aceitar…';else s='Conectados — vocês dois estão no '+(RM==='c'?'cinema 🎬':'jardim 🌳')+' ✨';
  if(st.textContent!==s)st.textContent=s}
 const pctx=$('pc').getContext('2d'),SWC=[0xff7aa8,0x6aa7ff,0xffb84d,0x8f7aff,0x3ccf9a,0xef4444,0x14b8a6,0xf5f5f5,0x2b2b3a,0xa3e635];let profWho=null;
-function hitTest(wx,wy){for(const [o,w] of [[me,'me'],[curP,'p']]){if(!o)continue;const low=['lie','lap','back','crawl'].includes(o.act),top=((low?34:o.act==='sit'?56:62)*(o.ht?1.18:1)*(RM==='c'?1.55:1))+18;if(Math.abs(wx-o.x)<(low?40:24)*(RM==='c'?1.55:1)&&wy>o.y-top&&wy<o.y+8)return w}return null}
+function hitTest(wx,wy,tight){for(const [o,w] of [[me,'me'],[curP,'p']]){if(!o)continue;const low=['lie','lap','back','crawl'].includes(o.act),top=((low?34:o.act==='sit'?56:62)*(o.ht?1.18:1)*(RM==='c'?1.55:1))+(tight?0:18);if(Math.abs(wx-o.x)<(low?40:tight?17:24)*(RM==='c'?1.55:1)&&wy>o.y-top&&wy<o.y+8)return w}return null}
 function saveLook(){try{localStorage.setItem('ed2look',JSON.stringify({c:me.c,bd:me.bd,ht:me.ht,hr:me.hr,sx:me.sx}))}catch(e){}}
 const ITEMS=[['Roupa rosa','c',0xff7aa8],['Corpo magro','bd',1,'🕴️'],['Roupa azul','c',0x6aa7ff],['Cabelo longo','hr',1,'💇‍♀️'],['Roupa laranja','c',0xffb84d],['Feminino','sx',1,'🚺'],['Altura alta','ht',1,'🦒'],['Roupa roxa','c',0x8f7aff],['Corpo normal','bd',0,'🧍'],['Roupa verde','c',0x3ccf9a],['Cabelo curto','hr',0,'💇‍♂️'],['Roupa vermelha','c',0xef4444],['Masculino','sx',0,'🚹'],['Roupa turquesa','c',0x14b8a6],['Altura normal','ht',0,'↕️'],['Roupa branca','c',0xf5f5f5],['Roupa preta','c',0x2b2b3a],['Roupa lima','c',0xa3e635]];
 const itg=$('itg');
@@ -267,8 +274,8 @@ function pushStream(){if(localStream&&conn&&conn.open&&peer){try{outCall&&outCal
 function stopShare(){if(localStream)localStream.getTracks().forEach(t=>{try{t.stop()}catch(e){}});try{outCall&&outCall.close()}catch(e){}outCall=null;localStream=null;vL.onplaying=null;vL.pause();vL.removeAttribute('src');vL.srcObject=null;if(fileURL){URL.revokeObjectURL(fileURL);fileURL=null}if(scr==='L')scr=null;ui()}
 function onCall(call){call.answer();call.on('stream',st=>{if(vR.srcObject===st)return;if(localStream||fileURL)stopShare();stopYT(false);vR.srcObject=st;vR.muted=RM!=='c';vR.volume=vol;scr='R';needClick=false;vR.play().catch(()=>{vR.muted=true;vR.play().catch(()=>{});needClick=true})});
  call.on('close',()=>{if(scr==='R'){scr=null;vR.srcObject=null;needClick=false}})}
-function screenClick(){if(scr==='R'&&needClick){vR.muted=false;vR.play().catch(()=>{});needClick=false;return}$('telap').classList.toggle('hidden')}
-$('tl').onclick=()=>$('telap').classList.toggle('hidden');
+function screenClick(){if(scr==='R'&&needClick){vR.muted=false;vR.play().catch(()=>{});needClick=false;return}togglePanel('telap')}
+$('tl').onclick=()=>togglePanel('telap');
 $('t-scr').onclick=async()=>{try{if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){tm('Este navegador não permite transmitir a tela.');return}
  const st=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});stopShare();stopYT(true);localStream=st;vL.srcObject=st;vL.muted=true;vL.play().catch(()=>{});scr='L';st.getVideoTracks()[0].onended=stopShare;pushStream();tm('Para ter áudio, marque "compartilhar áudio" ao escolher a aba.');ui()}catch(e){tm('Transmissão cancelada ou bloqueada.')}};
 $('t-vid').onclick=()=>$('t-file').click();
@@ -282,28 +289,52 @@ vL.onpause=vL.onplay=ui;vL.onended=ui;
 $('t-vol').oninput=()=>{vol=$('t-vol').value/100;vL.volume=vR.volume=vol;try{ytp&&ytp.setVolume(vol*100)}catch(e){}};
 $('t-stop').onclick=()=>{stopShare();stopYT(true);tm('')};
 const ytDiv=document.createElement('div');ytDiv.id='yt';ytDiv.className='hidden';cv.after(ytDiv);
-let ytp=null,ytId=null,ytReady=null,ytIgnore=0,ytLast=0;
+let ytp=null,ytId=null,ytReady=null,ytIgnore=0,ytLast=0,PL=[],plIdx=-1,ytRestart=0,ytLoadedAt=0;
 const sendMsg=m=>{if(conn&&conn.open)try{conn.send(m)}catch(e){}};
 function ytAPI(){if(window.YT&&YT.Player)return Promise.resolve();if(ytReady)return ytReady;
  return ytReady=new Promise(res=>{const p=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=()=>{p&&p();res()};const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';sc.onerror=()=>{ytReady=null;res()};document.head.append(sc);setTimeout(res,10000)})}
 function placeYT(){if(!ytId)return;ytDiv.style.visibility=RM==='c'?'visible':'hidden';if(RM!=='c')return;const s=ytDiv.style;s.left=(SX-camx)*ZM+'px';s.top=(SY-camy)*ZM+'px';s.width=SW*ZM+'px';s.height=SH*ZM+'px'}
-function stopYT(snd){if(ytp){try{ytp.destroy()}catch(e){}ytp=null}const had=ytId;ytId=null;ytDiv.classList.add('hidden');ytDiv.innerHTML='';if(snd&&had)sendMsg({yt:'stop'});ui()}
+function stopYT(snd){if(!ytRestart){plIdx=-1;renderPL()}if(ytp){try{ytp.destroy()}catch(e){}ytp=null}const had=ytId;ytId=null;ytDiv.classList.add('hidden');ytDiv.innerHTML='';if(snd&&had)sendMsg({yt:'stop'});ui()}
 async function startYT(id,t,playing,remote){if(RM!=='c')playing=false;stopShare();scr=null;vR.srcObject=null;needClick=false;await ytAPI();
  if(!window.YT||!YT.Player){tm('Não foi possível carregar o YouTube. Verifique a internet.');return}
- stopYT(false);ytId=id;ytDiv.classList.remove('hidden');ytDiv.innerHTML='<div id="ytp"></div>';ytIgnore=Date.now()+2000;
+ ytRestart=1;stopYT(false);ytRestart=0;ytId=id;ytLoadedAt=Date.now();ytDiv.classList.remove('hidden');ytDiv.innerHTML='<div id="ytp"></div>';ytIgnore=Date.now()+2000;
  const pv={autoplay:playing?1:0,start:Math.floor(t||0),rel:0,playsinline:1};if(/^https?:/.test(location.origin))pv.origin=location.origin;
  ytp=new YT.Player('ytp',{width:'100%',height:'100%',videoId:id,playerVars:pv,events:{onReady:e=>{e.target.setVolume(vol*100);playing?e.target.playVideo():e.target.pauseVideo()},onStateChange:ytState,onError:()=>tm('Este vídeo não pode ser incorporado ou não existe.')}});
  if(!remote)sendMsg({yt:'load',id,t:0,play:true});placeYT();ui()}
-function ytState(e){if(Date.now()<ytIgnore||!ytp)return;const t=ytp.getCurrentTime();if(e.data===1)sendMsg({yt:'play',t});else if(e.data===2)sendMsg({yt:'pause',t})}
-function ytRemote(m){if(m.yt==='stop'){stopYT(false);return}if(m.yt==='load'){startYT(m.id,m.t,m.play!==false,true);return}
+function ytState(e){if(e.data===0&&ytp&&plIdx>=0&&PL[plIdx]&&PL[plIdx].id===ytId&&plIdx+1<PL.length){playIdx(plIdx+1);return}if(Date.now()<ytIgnore||!ytp)return;const t=ytp.getCurrentTime();if(e.data===1)sendMsg({yt:'play',t});else if(e.data===2)sendMsg({yt:'pause',t})}
+function ytRemote(m){if(m.yt==='pl'){PL=(Array.isArray(m.list)?m.list:[]).filter(x=>x&&okId(x.id)).slice(0,50).map(x=>({id:x.id,t:String(x.t||'').slice(0,120),c:String(x.c||'').slice(0,60)}));plIdx=Math.min((+m.idx|0),PL.length-1);renderPL();return}
+ if(m.yt==='stop'){stopYT(false);return}if(m.yt==='load'){if(m.id===ytId&&Date.now()-ytLoadedAt<4000)return;startYT(m.id,m.t,m.play!==false,true);return}
  if(!ytp||!ytp.getPlayerState)return;ytIgnore=Date.now()+1200;const t=+m.t||0;if(Math.abs(ytp.getCurrentTime()-t)>1.5)ytp.seekTo(t,true);
  if(m.yt==='play')ytp.playVideo();else if(m.yt==='pause')ytp.pauseVideo()}
-function ytSync(){if(ytId&&ytp&&ytp.getCurrentTime)sendMsg({yt:'load',id:ytId,t:ytp.getCurrentTime(),play:ytp.getPlayerState()===1})}
+function ytSync(){if(PL.length)sendPL();if(ytId&&ytp&&ytp.getCurrentTime)sendMsg({yt:'load',id:ytId,t:ytp.getCurrentTime(),play:ytp.getPlayerState()===1})}
 setInterval(()=>{if(!ytp||!ytp.getCurrentTime||Date.now()<ytIgnore)return;try{const t=ytp.getCurrentTime(),ex=ytp.getPlayerState()===1?ytLast+.7:ytLast;if(Math.abs(t-ex)>1.8)sendMsg({yt:'seek',t});ytLast=t}catch(e){}},700);
 $('t-yt').onclick=()=>{const m=($('t-url').value.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/)||[])[1];if(!m){tm('Link inválido. Cole o endereço de um vídeo do YouTube.');return}
- tm('');$('t-url').value='';$('telap').classList.add('hidden');startYT(m,0,true,false)};
+ tm('');$('t-url').value='';addToPL({id:m,t:'youtu.be/'+m,c:''})};
+const okId=x=>typeof x==='string'&&/^[\w-]{11}$/.test(x),decodeH=t=>{const d=document.createElement('textarea');d.innerHTML=t;return d.value};
+function sendPL(){sendMsg({yt:'pl',list:PL,idx:plIdx})}
+function thumb(it){const i=document.createElement('img');i.src='https://i.ytimg.com/vi/'+it.id+'/default.jpg';i.alt='';i.loading='lazy';return i}
+function info(it){const d=document.createElement('span'),b=document.createElement('b'),m=document.createElement('small');b.textContent=it.t||it.id;m.textContent=it.c||'';d.append(b,m);return d}
+function renderPL(){const el=$('t-pl');el.textContent='';$('t-plh').classList.toggle('hidden',!PL.length);
+ PL.forEach((it,i)=>{const d=document.createElement('div'),x=document.createElement('button');d.className='vi'+(i===plIdx?' on':'');x.className='x';x.textContent='✖';x.title='Remover da lista';x.onclick=e=>{e.stopPropagation();rmPL(i)};d.append(thumb(it),info(it),x);d.onclick=()=>playIdx(i);el.append(d)})}
+function playIdx(i){if(!PL[i])return;plIdx=i;sendPL();renderPL();startYT(PL[i].id,0,true,false)}
+function addToPL(it){if(PL.some(x=>x.id===it.id)){tm('Esse vídeo já está na lista.');return}if(PL.length>=50){tm('A lista está cheia (50).');return}
+ PL.push({id:it.id,t:it.t||it.id,c:it.c||''});tm('➕ Adicionado: '+(it.t||it.id));renderPL();if(!ytId||plIdx<0)playIdx(PL.length-1);else sendPL()}
+function rmPL(i){const cur=i===plIdx;PL.splice(i,1);if(i<plIdx)plIdx--;if(cur){if(i<PL.length){playIdx(i);return}plIdx=-1;stopYT(true)}sendPL();renderPL()}
+const ytKey=()=>{try{return localStorage.getItem('ed2ytkey')||''}catch(e){return ''}};
+async function doSearch(){const q=$('t-q').value.trim();if(!q)return;if(!ytKey()){$('t-keyrow').classList.remove('hidden');tm('Para buscar no YouTube, cole sua chave da API abaixo.');return}
+ tm('Buscando…');$('t-res').textContent='';
+ try{const r=await fetch('https://www.googleapis.com/youtube/v3/search?'+new URLSearchParams({part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'10',q,key:ytKey()})),j=await r.json();if(j.error)throw new Error(j.error.message||'erro');
+  const items=(j.items||[]).filter(x=>x.id&&okId(x.id.videoId)).map(x=>({id:x.id.videoId,t:decodeH(x.snippet.title),c:decodeH(x.snippet.channelTitle)}));
+  tm(items.length?'Clique num vídeo para adicionar à lista.':'Nenhum vídeo encontrado.');
+  items.forEach(it=>{const b=document.createElement('button');b.className='vi';b.append(thumb(it),info(it));b.onclick=()=>addToPL(it);$('t-res').append(b)})}
+ catch(e){tm('Erro na busca: '+e.message);if(/key|API|quota/i.test(e.message))$('t-keyrow').classList.remove('hidden')}}
+$('t-qb').onclick=doSearch;$('t-q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+$('t-keyg').onclick=()=>$('t-keyrow').classList.toggle('hidden');
+$('t-keyb').onclick=()=>{const k=$('t-key').value.trim();if(!k)return;try{localStorage.setItem('ed2ytkey',k)}catch(e){}$('t-key').value='';$('t-keyrow').classList.add('hidden');tm('Chave salva.');doSearch()};
 $('t-url').addEventListener('keydown',e=>{if(e.key==='Enter')$('t-yt').click()});
 let travelling=false;
+document.addEventListener('contextmenu',e=>{if(!/^(INPUT|TEXTAREA)$/.test(e.target.tagName))e.preventDefault()});
+function togglePanel(id){const el=document.getElementById(id),wasHidden=el.classList.contains('hidden');['invp','telap','mapp'].forEach(p=>document.getElementById(p).classList.add('hidden'));if(wasHidden)el.classList.remove('hidden');closeCtx()}
 function closeCtx(){$('ctx').classList.add('hidden');$('c-act').classList.remove('open')}
 function openCtx(x,y){const m=$('ctx');m.classList.remove('hidden','flip');$('c-act').classList.remove('open');const w=m.offsetWidth,h=m.offsetHeight,l=Math.max(8,Math.min(x,innerWidth-w-8)),t=Math.max(8,Math.min(y,innerHeight-h-8));m.style.left=l+'px';m.style.top=t+'px';if(l+w+180>innerWidth)m.classList.add('flip')}
 $('c-prof').onclick=()=>{closeCtx();openProf('p')};
@@ -319,6 +350,6 @@ function doRoom(r){if(me.act!=='none')setAct(me.act);
  RM=r;if(r==='c'){W=1200;H=730;me.x=W/2+(Math.random()-.5)*300;me.y=H-50;if(scr==='R'){vR.muted=false;vR.play().catch(()=>{vR.muted=true;needClick=true})}}
  else{W=1800;H=1100;me.x=W/2+(Math.random()-.5)*200;me.y=H/2+60}
  me.tx=me.ty=null;me.jz=0;me.vz=0;$('tl').style.display=r==='c'?'':'none';$('m-g').classList.toggle('on',r==='g');$('m-c').classList.toggle('on',r==='c')}
-$('mp').onclick=()=>$('mapp').classList.toggle('hidden');$('m-g').onclick=()=>goRoom('g');$('m-c').onclick=()=>goRoom('c');
+$('mp').onclick=()=>togglePanel('mapp');$('m-g').onclick=()=>goRoom('g');$('m-c').onclick=()=>goRoom('c');
 requestAnimationFrame(loop);
 </script></body></html>
