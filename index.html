@@ -41,6 +41,11 @@ button.on{background:#ff6f9c;color:#fff}
 .pin{position:absolute;display:flex;flex-direction:column;align-items:center;font-size:13px;padding:8px 14px;border-radius:14px}.pin span{font-size:26px}.pin.on{background:#ff6f9c;color:#fff}
 #mapp h4{margin:8px 0}#mmsg{font-size:12px;opacity:.8;text-align:center;margin-top:8px}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:9;transition:opacity .5s ease}
+#ctx{position:fixed;z-index:7;background:#2a2447f2;border-radius:12px;padding:6px;min-width:150px;box-shadow:0 6px 20px #0008}
+#ctx button{display:flex;width:100%;justify-content:space-between;gap:12px;background:transparent;color:#fff;border-radius:8px;padding:9px 12px;font-size:14px;text-align:left;white-space:nowrap}
+#ctx button:hover{background:#ffffff26}#ctx .has{position:relative}
+#ctx .sub{display:none;position:absolute;left:calc(100% - 2px);top:-6px;background:#2a2447f2;border-radius:12px;padding:6px;min-width:170px;box-shadow:0 6px 20px #0008}
+#ctx .has:hover .sub,#ctx .has.open .sub{display:block}#ctx.flip .sub{left:auto;right:calc(100% - 2px)}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="lobby"><div class="box"><h2>💞 Espaço a Dois</h2>
@@ -54,6 +59,8 @@ button.on{background:#ff6f9c;color:#fff}
 <div id="prof" class="hidden"><div class="pbox"><button id="pclose">✕</button>
 <div class="pleft"><canvas id="pc" width="440" height="560"></canvas><div id="pcoins">🪙 0</div></div>
 <div class="pright" id="pright"><div id="itg"></div></div></div></div>
+<div id="ctx" class="hidden"><button id="c-prof"><span>👤 Perfil</span></button><div class="has" id="c-act"><button><span>🎭 Ações</span><span>▸</span></button><div class="sub">
+<button data-a="hug">🤗 Abraço</button><button data-a="kiss">💋 Beijo</button><button data-a="lead">🤝 Guiar pela mão</button><button data-a="follow">🙋 Seguir</button><button data-a="lap">😴 Deitar no colo</button></div></div></div>
 <div id="fade"></div>
 <div id="chat"><div id="log"></div><div class="row"><input id="ci" maxlength="120" placeholder="Mensagem (C ou Enter)" autocomplete="off"><button id="cs">➤</button></div></div>
 <div id="invp" class="hidden"><h4>Com a outra pessoa</h4><div class="grid"><button id="b-hug"><span>🤗</span>Abraço<small>1</small></button><button id="b-kiss"><span>💋</span>Beijo<small>2</small></button><button id="b-lead"><span>🤝</span>Guiar<small>3</small></button><button id="b-follow"><span>🙋</span>Seguir<small>4</small></button><button id="b-lap"><span>😴</span>Deitar no colo<small>5</small></button></div><h4>Poses</h4><div class="grid"><button id="b-sit"><span>🪑</span>Sentar<small>6</small></button><button id="b-lie"><span>🛌</span>Dormir<small>7</small></button><button id="b-back"><span>🌤</span>Barriga pra cima<small>8</small></button><button id="b-crawl"><span>🐛</span>Rastejar<small>9</small></button></div><h4></h4><div class="grid" style="grid-template-columns:1fr"><button id="b-none"><span>✖</span>Soltar / levantar<small>0</small></button></div></div>
@@ -118,9 +125,9 @@ function setAct(a){const old=me.act;me.act=old===a?'none':a;
  if(me.act==='sit'&&RM==='c'){let best=-1,bd=170;SEATS.forEach((q,i)=>{const d=Math.hypot(q.x-me.x,q.y-me.y);if(d<bd&&!(curP&&curP.act==='sit'&&curP.seat===i)){bd=d;best=i}});me.seat=best}else if(me.act!=='sit')me.seat=-1;IDS.forEach(k=>document.getElementById('b-'+k).classList.toggle('on',me.act===k&&k!=='none'));$('inv').classList.toggle('on',me.act!=='none')}
 IDS.forEach(k=>document.getElementById('b-'+k).onclick=()=>{setAct(k);$('invp').classList.add('hidden')});document.getElementById('inv').onclick=()=>document.getElementById('invp').classList.toggle('hidden');
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(profWho){if(e.code==='Escape')closeProf();return}if(e.code==='Space'){e.preventDefault();if(!e.repeat)wantJump=true}if(!e.repeat&&'KeyW KeyA KeyS KeyD ArrowUp ArrowDown ArrowLeft ArrowRight'.split(' ').includes(e.code)){const n=performance.now();if(lastTap.c===e.code&&n-lastTap.t<300)me.run=true;lastTap={c:e.code,t:n}}if((e.code==='Enter'||e.code==='KeyC')&&$('lobby').style.display==='none'){e.preventDefault();$('ci').focus();return}keys[e.code]=1;const k=e.code;
- if(k==='KeyI')$('invp').classList.toggle('hidden');if(k==='KeyM')$('mapp').classList.toggle('hidden');if(k==='Escape'){$('invp').classList.add('hidden');$('telap').classList.add('hidden');$('mapp').classList.add('hidden')}{const ac=ACTK[e.key];if(ac==='none'){if(me.act!=='none')setAct(me.act)}else if(ac)setAct(ac)}});
+ if(k==='KeyI')$('invp').classList.toggle('hidden');if(k==='KeyM')$('mapp').classList.toggle('hidden');if(k==='Escape'){$('invp').classList.add('hidden');$('telap').classList.add('hidden');$('mapp').classList.add('hidden');closeCtx()}{const ac=ACTK[e.key];if(ac==='none'){if(me.act!=='none')setAct(me.act)}else if(ac)setAct(ac)}});
 addEventListener('keyup',e=>keys[e.code]=0);
-cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}if(!$('invp').classList.contains('hidden')){$('invp').classList.add('hidden');return}if(!$('telap').classList.contains('hidden')){$('telap').classList.add('hidden');return}if(!$('mapp').classList.contains('hidden')){$('mapp').classList.add('hidden');return}{const wx=camx+e.clientX/ZM,wy=camy+e.clientY/ZM;if(RM==='c'&&wx>=SX&&wx<=SX+SW&&wy>=SY&&wy<=SY+SH){screenClick();return}}const hh=hitTest(camx+e.clientX/ZM,camy+e.clientY/ZM);if(hh){openProf(hh);return}if(LOW.includes(me.act))setAct(me.act);me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
+cv.addEventListener('pointerdown',e=>{if(document.activeElement&&document.activeElement.tagName==='INPUT'){document.activeElement.blur();return}if(!$('invp').classList.contains('hidden')){$('invp').classList.add('hidden');return}if(!$('telap').classList.contains('hidden')){$('telap').classList.add('hidden');return}if(!$('mapp').classList.contains('hidden')){$('mapp').classList.add('hidden');return}if(!$('ctx').classList.contains('hidden')){closeCtx();return}{const wx=camx+e.clientX/ZM,wy=camy+e.clientY/ZM;if(RM==='c'&&wx>=SX&&wx<=SX+SW&&wy>=SY&&wy<=SY+SH){screenClick();return}}const hh=hitTest(camx+e.clientX/ZM,camy+e.clientY/ZM);if(hh==='p'){openCtx(e.clientX,e.clientY);return}if(hh){openProf(hh);return}{const si=seatAt(camx+e.clientX/ZM,camy+e.clientY/ZM);if(si>=0){sitSeat(si);return}}if(LOW.includes(me.act))setAct(me.act);me.tx=camx+e.clientX/ZM;me.ty=camy+e.clientY/ZM});
 function partner(){if(!remote){remObj=null;return null}
  if(!remObj)remObj={x:remote.x,y:remote.y};const r=remObj,d=remote,rmv=d.rm||'g';if(r.rmx!==rmv){r.x=d.x;r.y=d.y}r.s=d;r.act=d.act;r.c=+d.c||0x6aa7ff;r.fx=d.fx;r.dx=d.dx;r.dy=d.dy;r.mv=d.mv;r.says=peerSays;r.name=typeof d.n==='string'?d.n.slice(0,16):'';r.bd=d.bd|0;r.ht=d.ht|0;r.hr=d.hr|0;r.sx=d.sx|0;r.coins=d.co|0;r.typing=peerTyping;r.jzt=d.jz||0;r.seat=d.sa>=0?d.sa:-1;r.rmx=rmv;return rmv===RM?r:null}
 function pairing(P){if(!P||Math.hypot(P.x-me.x,P.y-me.y)>400)return null;const a=me.act,b=P.act;
@@ -202,7 +209,7 @@ function tree(t){ctx.fillStyle='#8a6a55';ctx.fillRect(t.x-5*t.s,t.y-22*t.s,10*t.
  ctx.fillStyle=t.c;ctx.beginPath();ctx.arc(t.x,t.y-38*t.s,26*t.s,0,7);ctx.arc(t.x-14*t.s,t.y-28*t.s,16*t.s,0,7);ctx.arc(t.x+14*t.s,t.y-28*t.s,16*t.s,0,7);ctx.fill()}
 let last=performance.now();
 function loop(now){requestAnimationFrame(loop);const dt=Math.min((now-last)/1000,.1);last=now;const t=now/1000,k=1-Math.exp(-12*dt);
- const P=partner();curP=P;
+ const P=partner();curP=P;if(!P&&!$('ctx').classList.contains('hidden'))closeCtx();
  if(P){P.x+=(P.s.x-P.x)*k;P.y+=(P.s.y-P.y)*k;P.jz=(P.jz||0)+((P.jzt||0)-(P.jz||0))*k}
  const pk=pairing(P),locked=pk==='lapL'||pk==='hug'||pk==='kiss'||(pk==='hold'&&me.act==='follow');
  if(!locked){let vx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0),vy=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0);
@@ -297,6 +304,15 @@ $('t-yt').onclick=()=>{const m=($('t-url').value.match(/(?:youtu\.be\/|[?&]v=|\/
  tm('');$('t-url').value='';$('telap').classList.add('hidden');startYT(m,0,true,false)};
 $('t-url').addEventListener('keydown',e=>{if(e.key==='Enter')$('t-yt').click()});
 let travelling=false;
+function closeCtx(){$('ctx').classList.add('hidden');$('c-act').classList.remove('open')}
+function openCtx(x,y){const m=$('ctx');m.classList.remove('hidden','flip');$('c-act').classList.remove('open');const w=m.offsetWidth,h=m.offsetHeight,l=Math.max(8,Math.min(x,innerWidth-w-8)),t=Math.max(8,Math.min(y,innerHeight-h-8));m.style.left=l+'px';m.style.top=t+'px';if(l+w+180>innerWidth)m.classList.add('flip')}
+$('c-prof').onclick=()=>{closeCtx();openProf('p')};
+function fitSub(){const sub=$('c-act').querySelector('.sub');sub.style.top='-6px';const r=sub.getBoundingClientRect(),over=r.bottom-(innerHeight-8);if(over>0)sub.style.top=Math.max(-6-over,-($('c-act').getBoundingClientRect().top-8))+'px'}
+$('c-act').addEventListener('mouseenter',fitSub);$('c-act').firstElementChild.onclick=()=>{$('c-act').classList.toggle('open');fitSub()};
+$('ctx').querySelectorAll('.sub button').forEach(b=>b.onclick=()=>{closeCtx();if(me.act!==b.dataset.a)setAct(b.dataset.a)});
+document.addEventListener('pointerdown',e=>{if(e.target!==cv&&!$('ctx').contains(e.target))closeCtx()});
+function seatAt(wx,wy){if(RM!=='c')return -1;for(let n=0;n<SOFAS.length;n++){const o=SOFAS[n];if(wx>=o.x&&wx<=o.x+300&&wy>=o.y&&wy<=o.y+62){let best=-1,bd=1e9;for(let k=0;k<3;k++){const i=n*3+k;if(curP&&curP.act==='sit'&&curP.seat===i)continue;const d=Math.abs(SEATS[i].x-wx);if(d<bd){bd=d;best=i}}return best}}return -1}
+function sitSeat(i){if(me.act==='sit'&&me.seat===i){setAct('sit');return}if(me.act!=='sit')setAct('sit');me.seat=i;me.tx=me.ty=null}
 function goRoom(r){$('mapp').classList.add('hidden');if(r===RM||travelling)return;travelling=true;const f=$('fade');f.style.opacity=1;setTimeout(()=>{doRoom(r);setTimeout(()=>{f.style.opacity=0;travelling=false},200)},520)}
 function doRoom(r){if(me.act!=='none')setAct(me.act);
  if(RM==='c'){ytIgnore=Date.now()+1500;try{ytp&&ytp.pauseVideo()}catch(e){}vR.muted=true;$('telap').classList.add('hidden')}
